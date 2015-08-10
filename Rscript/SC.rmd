@@ -40,20 +40,30 @@ summary(ages)
 plot(ages,withDepths=TRUE)
 ```
 
-```{r ratio NRSP-NISP}
-#1. Ratios of NRSP/NISP per layer 
-##-Driven by sample size? rs
+```{r ratio NRSP-NISP calculation}
+#####Calculate ratios of NRSP/NISP per layer, then see if these are driven by sample size using a test of spearmans rho. 
 sc <- read.csv("sc.csv", stringsAsFactors = FALSE, check.names = FALSE)
 sc
 str(sc)
 
 #Okay, so I need to take the NISP totals (excluding rows 33-36,51-53) and column totals (NRPS) then divide...
 
+NISP <- sc[sc$Taxon[1:33,37:50], -1]
+#I'm having a problem with this last command...do you know how I can tell R to just select those rows for the analysis?
+NRSP <- colSums(sc[ ,-1])
+NRSP_NISP <-  NISP / NRSP
+NRSP_NISP <- t(relative_abundance)
+NRSP_NISP <- data_frame(`Layer` = row.names(NRSP/NISP), 
+                                 `NRSP/NISP` = NRSP_NISP[,1])
+
+
+#Then I need to take these ratios and use NRSP to run a spearmans rho analysis...
+
 
 ###Everything below this is very messy and is the code I used when initially analyzing the data. I will clean it up, but I need to figure out how to do this NRSP-NISP command first since so much of the analyses below are similar...
 ```
 
-#######NISP and NRSP/NISP relationship####
+#######NISP and NRSP/NISP relationship spearmans rho####
 site <- read.table(text="
                    NISP bNISP 
                    44 0         
@@ -82,6 +92,7 @@ for (i1 in 1:ncol(site)) {
   }
 }
 s.corr.pval
+
 
 #2. Regression analysis of NISP-NTAXA
 ##N-taxa driven by sample size? rs
