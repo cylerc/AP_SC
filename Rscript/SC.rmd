@@ -23,6 +23,10 @@ opts_knit$set(root.dir = '../')
 # see the output of sessionInfo() at the bottom for package version numbers
 library(Bchron)
 library(car)
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+
 ```
 
 ```{r radiocarbon calibration}
@@ -63,6 +67,7 @@ NRSP_NISP <- data_frame(`Layer` = row.names(NRSP/NISP),
 ###Everything below this is very messy and is the code I used when initially analyzing the data. I will clean it up, but I need to figure out how to do this NRSP-NISP command first since so much of the analyses below are similar...
 ```
 
+```{r}
 #######NISP and NRSP/NISP relationship spearmans rho####
 site <- read.table(text="
                    NISP bNISP 
@@ -92,6 +97,7 @@ for (i1 in 1:ncol(site)) {
   }
 }
 s.corr.pval
+```
 
 ```{r}
 #2. Regression analysis of NISP-NTAXA
@@ -125,8 +131,9 @@ lm.mni.ntaxa
 summary(lm.mni.ntaxa)
 plot((scmni$MNI), (scmni$NTAXA), main="Spirit Cave MNI-NTAXA", xlab="MNI", ylab="NTAXA")
 abline(lm.mni.ntaxa)
+```
 
-
+```{r}
 # Plot and first axis:
 plot(sc$NISP, sc$NTAXA,col="red",pch=16,axes=FALSE,main="Spirit Cave MNI-NTAXA", xlab="", ylab="NTAXA")
 axis(2,las=1)
@@ -137,8 +144,9 @@ mtext("NISP",1,line=1,at=7,col="red")
 points((scmni$MNI), (scmni$NTAXA),pch=16, col="blue" )
 axis(1,0:11,labels=0:11*10,line=3,col="blue",col.ticks="blue",col.axis="blue")
 mtext("Label 2",1,line=3,at=0.2,col="blue")
+```
 
-
+```{r}
 scnm <- read.table(text="
 NISP MNI NTAXA
 44  10 10     
@@ -148,11 +156,10 @@ NISP MNI NTAXA
 1766 49 34
 ", header=TRUE)
 scnm
+```
 
-library(ggplot2)
-library(reshape2)
-library(dplyr)
 
+```{r}
 #Present and interpret residual plots
 par(mfrow=c(2,3))
 plot(lm.nisp.ntaxa, which = c(1,4,6))
@@ -181,6 +188,7 @@ CI.upper <- est.beta1 + t.crit * se.beta1
 c(CI.lower, CI.upper)
 ```
 
+```{r}
 #3. Cooks distance and leverage
 #4. Chi-squared on NISPs per layer
 
@@ -243,6 +251,7 @@ chisq.summary
 
 #5. Burning NISPs related to sample size? rs
 #6. Bat abundance driven by sample size? rs
+```
 
 ```{r}
 ###########Spearman Rank correlation between total bat NISP and NRSP####
@@ -276,6 +285,7 @@ for (i1 in 1:ncol(bat)) {
 s.corr.pval
 ```
 
+```{r}
 ###############1/D
 simp <- read.table(text="
 Layer Evenness
@@ -292,6 +302,9 @@ library(ggplot2)
 ggplot(simp.long, aes(Evenness, group=1)) + 
   geom_point () + 
   geom_line()
+```
+
+
 ```{r}
 #########Burning and correlation with sample size#####
 burn <- read.table(text="
@@ -324,6 +337,7 @@ for (i1 in 1:ncol(burn)) {
 s.corr.pval
 ```
 
+```{r}
 #########NISP and NTAXA rank#####
 site <- read.table(text="
                    NISP NTAXA 
@@ -353,7 +367,9 @@ for (i1 in 1:ncol(site)) {
   }
 }
 s.corr.pval
+```
 
+```{r}
 #####Plots 
 sc
 plot(log(sc$NISP), log(sc$NTAXA), main="Spirit Cave log(NISP-NTAXA)", xlab="log(NISP)", ylab="log(NTAXA)")
@@ -364,9 +380,10 @@ plot(lm.nisp.ntaxa, which = c(4,6))
 library(car)
 qqPlot(lm.nisp.ntaxa$residuals, las = 1, id.n = 3, main="QQ Plot")
 hist(lm.nisp.ntaxa$residuals, breaks=5, main="Residuals")
+```
 
 
-
+```{r}
 #Perform a Shapiro-Wilk test on the standardized residuals
 shapiro.test(lm.nisp.ntaxa$residuals)
 #1d.Present and interpret the ANOVA table and R2 value
@@ -384,7 +401,6 @@ t.crit
 CI.lower <- est.beta1 - t.crit * se.beta1
 CI.upper <- est.beta1 + t.crit * se.beta1
 c(CI.lower, CI.upper)
-
 
 ```
 
