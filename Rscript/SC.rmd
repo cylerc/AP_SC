@@ -126,6 +126,8 @@ lm.mni.ntaxa<-lm((NTAXA)~(MNI), data=scm)
 lm.mni.ntaxa
 summary(lm.mni.ntaxa)
 
+#Ben-Emily suggested that I include these plots in the paper - but I'm not too sure...do you have any advice on this? She thought it might be nice to try and make one plot showing both regression lines, but I couldn't figure out how to do this! 
+
 #3.3 NTAXA and sample size (nrs=NTAXA spearmans rho).
 nrs<- read.table(text="
                    NRSP NTAXA 
