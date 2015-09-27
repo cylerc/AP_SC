@@ -26,6 +26,7 @@ library(car)
 ```
 
 ```{r radiocarbon calibration}
+#1. Calibrate radiocarbon dates. 
 dates <- read.csv("dates.csv",stringsAsFactors = FALSE, check.names = FALSE)
 dates
 #I want to calibrate this table of dates, but I can't figure out how to use the csv file to do it I've manually input them below
@@ -41,7 +42,7 @@ plot(ages,withDepths=TRUE)
 ```
 
 ```{r ratio NRSP-NISP calculation}
-#####Calculate ratios of NRSP/NISP per layer, then see if these are driven by sample size using a test of spearmans rho. 
+#2. Calculate ratios of NRSP/NISP per layer, then see if these are driven by sample size using a test of spearmans rho. 
 sc <- read.csv("sc.csv", stringsAsFactors = FALSE, check.names = FALSE)
 sc
 str(sc)
@@ -63,39 +64,8 @@ NRSP_NISP <- data_frame(`Layer` = row.names(NRSP/NISP),
 ###Everything below this is very messy and is the code I used when initially analyzing the data. I will clean it up, but I need to figure out how to do this NRSP-NISP command first since so much of the analyses below are similar...
 ```
 
-#######NISP and NRSP/NISP relationship spearmans rho####
-site <- read.table(text="
-                   NISP bNISP 
-                   44 0         
-                   141 373    
-                   15 113  
-                   1 107  
-                   251 1767  
-                   ", header=TRUE)
-site
-p.corr <-cor(site)
-p.corr
-p.corr.pval <- p.corr;
-for (i1 in 1:ncol(site)) {
-  for (i2 in 1:ncol(site)) {
-    p.corr.pval[i1,i2] <- cor.test(site[, i1], site[, i2])$p.value
-  }
-}
-p.corr.pval
-s.corr <- cor(site, method="spearman")
-s.corr
-site
-s.corr.pval <- p.corr;
-for (i1 in 1:ncol(site)) {
-  for (i2 in 1:ncol(site)) {
-    s.corr.pval[i1,i2] <- cor.test(site[, i1], site[, i2], method="spearman")$p.value
-  }
-}
-s.corr.pval
-
 ```{r}
-#2. Regression analysis of NISP-NTAXA
-##N-taxa driven by sample size? rs
+#3. Regression analysis of NISP-NTAXA, Cook's distance/leverage and Spearmans rho
 sc <- read.table(text="
 NISP NTAXA
 44 10     
@@ -126,33 +96,6 @@ summary(lm.mni.ntaxa)
 plot((scmni$MNI), (scmni$NTAXA), main="Spirit Cave MNI-NTAXA", xlab="MNI", ylab="NTAXA")
 abline(lm.mni.ntaxa)
 
-
-# Plot and first axis:
-plot(sc$NISP, sc$NTAXA,col="red",pch=16,axes=FALSE,main="Spirit Cave MNI-NTAXA", xlab="", ylab="NTAXA")
-axis(2,las=1)
-axis(1,line=1,col="red",col.ticks="red",col.axis="red")
-mtext("NISP",1,line=1,at=7,col="red")
-
-# Secondary points and axis:
-points((scmni$MNI), (scmni$NTAXA),pch=16, col="blue" )
-axis(1,0:11,labels=0:11*10,line=3,col="blue",col.ticks="blue",col.axis="blue")
-mtext("Label 2",1,line=3,at=0.2,col="blue")
-
-
-scnm <- read.table(text="
-NISP MNI NTAXA
-44  10 10     
-372 42 29
-113 10 11
-107 17 20
-1766 49 34
-", header=TRUE)
-scnm
-
-library(ggplot2)
-library(reshape2)
-library(dplyr)
-
 #Present and interpret residual plots
 par(mfrow=c(2,3))
 plot(lm.nisp.ntaxa, which = c(1,4,6))
@@ -179,11 +122,41 @@ t.crit
 CI.lower <- est.beta1 - t.crit * se.beta1
 CI.upper <- est.beta1 + t.crit * se.beta1
 c(CI.lower, CI.upper)
+
+#Ntaxa driven by sample size? Spearmans rho
+site <- read.table(text="
+                   NISP NTAXA 
+                   44 10      
+                   373 31 
+                   113 13 
+                   107 22 
+                   1767 36 
+                   ", header=TRUE)
+site
+p.corr <-cor(site)
+p.corr
+p.corr.pval <- p.corr;
+for (i1 in 1:ncol(site)) {
+  for (i2 in 1:ncol(site)) {
+    p.corr.pval[i1,i2] <- cor.test(site[, i1], site[, i2])$p.value
+  }
+}
+p.corr.pval
+s.corr <- cor(site, method="spearman")
+s.corr
+site
+s.corr.pval <- p.corr;
+for (i1 in 1:ncol(site)) {
+  for (i2 in 1:ncol(site)) {
+    s.corr.pval[i1,i2] <- cor.test(site[, i1], site[, i2], method="spearman")$p.value
+  }
+}
+s.corr.pval
+
 ```
 
-#3. Cooks distance and leverage
+```{r}
 #4. Chi-squared on NISPs per layer
-
 ################Analyzing Chi-squared between layers at SC#############
 ################Chi-squared test between Layer 4 and 3#################
 scl4l3 <-
@@ -240,12 +213,42 @@ scl2l1 <-
 scl2l1
 chisq.summary <- chisq.test(scl2l1, correct=FALSE)
 chisq.summary
-
-#5. Burning NISPs related to sample size? rs
-#6. Bat abundance driven by sample size? rs
+```
 
 ```{r}
-###########Spearman Rank correlation between total bat NISP and NRSP####
+#5. Burning NISPs related to sample size? Spearmans rho
+burn <- read.table(text="
+                  NISP NRSP
+                  9 44     
+                  72 373
+                  16 113
+                  30 107
+                  194 1767
+                  ", header=TRUE)
+burn
+p.corr <-cor(burn)
+p.corr
+p.corr.pval <- p.corr;
+for (i1 in 1:ncol(burn)) {
+  for (i2 in 1:ncol(burn)) {
+    p.corr.pval[i1,i2] <- cor.test(burn[, i1], burn[, i2])$p.value
+  }
+}
+p.corr.pval
+s.corr <- cor(burn, method="spearman")
+s.corr
+burn
+s.corr.pval <- p.corr;
+for (i1 in 1:ncol(burn)) {
+  for (i2 in 1:ncol(burn)) {
+    s.corr.pval[i1,i2] <- cor.test(burn[, i1], burn[, i2], method="spearman")$p.value
+  }
+}
+s.corr.pval
+```
+
+```{r}
+#6. Bat abundance driven by sample size? Spearmans rho
 bat <- read.table(text="
 NISP NRSP
 0 44     
@@ -275,117 +278,3 @@ for (i1 in 1:ncol(bat)) {
 }
 s.corr.pval
 ```
-
-###############1/D
-simp <- read.table(text="
-Layer Evenness
-1 4.16     
-2 4.49
-2a 5.03
-3 14.29
-4 3.38
-", header=TRUE)
-simp
-attach(simp)
-plot(Layer, Evenness, type="p")
-library(ggplot2)
-ggplot(simp.long, aes(Evenness, group=1)) + 
-  geom_point () + 
-  geom_line()
-```{r}
-#########Burning and correlation with sample size#####
-burn <- read.table(text="
-NISP NRSP
-9 44     
-                  72 373
-                  16 113
-                  30 107
-                  194 1767
-                  ", header=TRUE)
-burn
-p.corr <-cor(burn)
-p.corr
-p.corr.pval <- p.corr;
-for (i1 in 1:ncol(burn)) {
-  for (i2 in 1:ncol(burn)) {
-    p.corr.pval[i1,i2] <- cor.test(burn[, i1], burn[, i2])$p.value
-  }
-}
-p.corr.pval
-s.corr <- cor(burn, method="spearman")
-s.corr
-burn
-s.corr.pval <- p.corr;
-for (i1 in 1:ncol(burn)) {
-  for (i2 in 1:ncol(burn)) {
-    s.corr.pval[i1,i2] <- cor.test(burn[, i1], burn[, i2], method="spearman")$p.value
-  }
-}
-s.corr.pval
-```
-
-#########NISP and NTAXA rank#####
-site <- read.table(text="
-                   NISP NTAXA 
-                   44 10      
-                   373 31 
-                   113 13 
-                   107 22 
-                   1767 36 
-                   ", header=TRUE)
-site
-p.corr <-cor(site)
-p.corr
-p.corr.pval <- p.corr;
-for (i1 in 1:ncol(site)) {
-  for (i2 in 1:ncol(site)) {
-    p.corr.pval[i1,i2] <- cor.test(site[, i1], site[, i2])$p.value
-  }
-}
-p.corr.pval
-s.corr <- cor(site, method="spearman")
-s.corr
-site
-s.corr.pval <- p.corr;
-for (i1 in 1:ncol(site)) {
-  for (i2 in 1:ncol(site)) {
-    s.corr.pval[i1,i2] <- cor.test(site[, i1], site[, i2], method="spearman")$p.value
-  }
-}
-s.corr.pval
-
-#####Plots 
-sc
-plot(log(sc$NISP), log(sc$NTAXA), main="Spirit Cave log(NISP-NTAXA)", xlab="log(NISP)", ylab="log(NTAXA)")
-abline(lm.nisp.ntaxa)
-#Present and interpret residual plots
-par(mfrow=c(1,2))
-plot(lm.nisp.ntaxa, which = c(4,6))
-library(car)
-qqPlot(lm.nisp.ntaxa$residuals, las = 1, id.n = 3, main="QQ Plot")
-hist(lm.nisp.ntaxa$residuals, breaks=5, main="Residuals")
-
-
-
-#Perform a Shapiro-Wilk test on the standardized residuals
-shapiro.test(lm.nisp.ntaxa$residuals)
-#1d.Present and interpret the ANOVA table and R2 value
-anova(lm.nisp.ntaxa)
-summary(lm.nisp.ntaxa)
-#1e.Present estimate table and estimated regression equation
-sum.lm.nisp.ntaxa <- summary(lm.nisp.ntaxa)
-sum.lm.nisp.ntaxa$coefficients
-est.beta1 <- sum.lm.nisp.ntaxa$coefficients[2,1]
-se.beta1 <- sum.lm.nisp.ntaxa$coefficients[2,2]
-sum.lm.nisp.ntaxa$fstatistic
-df.beta1 <- sum.lm.nisp.ntaxa$fstatistic[3]
-t.crit <- qt(1-0.05/2, df.beta1)
-t.crit
-CI.lower <- est.beta1 - t.crit * se.beta1
-CI.upper <- est.beta1 + t.crit * se.beta1
-c(CI.lower, CI.upper)
-
-
-```
-
-
