@@ -13,7 +13,7 @@ All data required to perform the analyses can be found at the University of New 
 Details of the computational environment and software dependencies are listed at the end of this document. 
 
 References: 
-Conrad, C. 2015. Archaeological Databases for Spirit Cave, Mae Hong Son Province, Thailand  [dataset]. University of New Mexico. http://repository.unm.edu/handle/1929/26730
+Conrad, C. 2015. Archaeological Databases for Spirit Cave, Mae Hong Son Province, Thailand  [dataset]. University of New Mexico. http://repository.unm.edu/handle/1928/26730
 
 ```{r setup}
 # set the base directory for knitr to the directory above this one
