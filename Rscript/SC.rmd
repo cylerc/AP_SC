@@ -15,6 +15,7 @@ Conrad, C. 2015. Archaeological Databases for Spirit Cave, Mae Hong Son Province
 
 ```{r setup}
 # set the base directory for knitr to the directory above this one
+# install.packages(c("knitr", "Bchron", "car", "ggplot2", "reshape2", "dplyr"))
 library(knitr)
 opts_knit$set(root.dir = '../')
 ```
@@ -23,22 +24,34 @@ opts_knit$set(root.dir = '../')
 # see the output of sessionInfo() at the bottom for package version numbers
 library(Bchron)
 library(car)
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+library(viridis)
 ```
 
 ```{r radiocarbon calibration}
 #1. Calibrate Spirit Cave radiocarbon dates. 
 dates <- read.csv("dates.csv",stringsAsFactors = FALSE, check.names = FALSE)
 dates
-#Ben-I want to calibrate this table of dates, but I can't figure out how to use the csv file to do it I've manually input them below
-ages=BchronCalibrate(ages=c(3042,2995,7400,7905,8550,8520,11350,9180,10910),
-                     ageSds=c(37,40,300,390,200,290,560,360,580),
-                     positions=c(1,1,1,2,2,`2a`,`3/4`,4,4),
-                     calCurves="intcal13")
-#...but I get this error: Error in BchronCalibrate(ages = c(3042, 2995, 7400, 7905, 8550, 8520,  : ages and calCurves should be of same length
-#Any thoughts on this?
+#1. Calibrate Spirit Cave radiocarbon dates. 
+dates <- read.csv("dates.csv",stringsAsFactors = FALSE, check.names = FALSE)
+dates
+ages <- BchronCalibrate(ages = dates$Ages,
+                     ageSds = dates$ageSds,
+                     positions = c(1,1,1,2,2,"2a","3/4",4,4),
+                     calCurves = rep("intcal13", length(dates$Ages)))
 summary(ages)
-#Should I include a plot for the paper???
-plot(ages,withDepths=TRUE)
+# see all calibrated dates
+par(mfrow=c(3, 3)) # set up a grid of 3x3 plots
+plot(ages) # put all the plots on that grid
+
+# or better, we can combine all the calibrated dates into a single plot, like this: 
+ages_densities <- BchronDensity(ages = dates$Ages,
+                     ageSds = dates$ageSds,
+                     calCurves = rep("intcal13", length(dates$Ages)))
+# this is the plot that should go in the paper
+plot(ages_densities, xlab='Age (cal years BP)')
 ```
 
 ```{r ratio NRSP-NISP calculation}
@@ -49,14 +62,12 @@ str(sc)
 
 #Okay, so I need to take the NISP totals (excluding rows 33-36,51-53) and column totals (NRPS) then divide...
 
-NISP <- sc[sc$Taxon[1:33,37:50], -1]
-#I'm having a problem with this last command...do you know how I can tell R to just select those rows for the analysis?
+NISP <- sc[c(1:33,37:50), -1]
 NRSP <- colSums(sc[ ,-1])
 NRSP_NISP <-  NISP / NRSP
-NRSP_NISP <- t(relative_abundance)
-NRSP_NISP <- data_frame(`Layer` = row.names(NRSP/NISP), 
-                                 `NRSP/NISP` = NRSP_NISP[,1])
-
+NRSP_NISP <- t(relative_abundance) # what is this?
+NRSP_NISP <- data_frame(Layer = row.names(NRSP/NISP), 
+                        `NRSP/NISP` = NRSP_NISP[,1])
 #Then I need to take these ratios and use NRSP to run a spearmans rho analysis...
 
 ####Here is my cheating way without actually using the raw table...
@@ -69,29 +80,9 @@ Ratio NRSP
 3.96 107
 4.49 1766
 ", header=TRUE)
-
-p.corr <-cor(ratio)
-p.corr
-p.corr.pval <- p.corr;
-for (i1 in 1:ncol(ratio)) {
-  for (i2 in 1:ncol(ratio)) {
-    p.corr.pval[i1,i2] <- cor.test(ratio[, i1], ratio[, i2])$p.value
-  }
-}
-p.corr.pval
-s.corr <- cor(ratio, method="spearman")
-s.corr
-ratio
-s.corr.pval <- p.corr;
-for (i1 in 1:ncol(ratio)) {
-  for (i2 in 1:ncol(ratio)) {
-    s.corr.pval[i1,i2] <- cor.test(ratio[, i1], ratio[, i2], method="spearman")$p.value
-  }
-}
-s.corr.pval
 ```
 
-```{r linear regression analysis}
+```{r linear regression analysis 1 }
 #3. Linear regression analysis of NISP to NTAXA, Cook's distance and leverage analysis of these values a and Spearmans rho test with sample size.
 
 #3.1 NISP to NTAXA.
@@ -103,13 +94,22 @@ NISP NTAXA
 107 20
 1766 34
 ", header=TRUE)
-scn
-plot(scn$NISP, scn$NTAXA, main="Spirit Cave NISP-NTAXA", xlab="NISP", ylab="NTAXA")
-abline(lm.nisp.ntaxa)
-lm.nisp.ntaxa<-lm((NTAXA)~(NISP), data=scn)
-lm.nisp.ntaxa
-summary(lm.nisp.ntaxa)
 
+scn
+
+# I prefer ggplot
+ggplot(scn, aes(NISP, NTAXA)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "glm") +
+  theme_minimal() +
+  ggtitle("Spirit Cave NISP-NTAXA")
+
+glm.nisp.ntaxa <- glm(NTAXA ~ NISP, data = scn, family = gaussian)
+glm.nisp.ntaxa
+summary(glm.nisp.ntaxa)
+```
+
+```{r linear regression analysis 2}
 #3.2 MNI to NTAXA.
 scm <- read.table(text="
 MNI NTAXA
@@ -119,54 +119,24 @@ MNI NTAXA
 17 20
 49 34
 ", header=TRUE)
+
 scm
-plot(scm$MNI, scm$NTAXA, main="Spirit Cave MNI-NTAXA", xlab="MNI", ylab="NTAXA")
-abline(lm.mni.ntaxa)
-lm.mni.ntaxa<-lm((NTAXA)~(MNI), data=scm)
-lm.mni.ntaxa
-summary(lm.mni.ntaxa)
 
-#Ben-Emily suggested that I include these plots in the paper - but I'm not too sure...do you have any advice on this? She thought it might be nice to try and make one plot showing both regression lines, but I couldn't figure out how to do this! 
+# I prefer ggplot
+ggplot(scm, aes(MNI, NTAXA)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "glm") +
+  theme_minimal() +
+  ggtitle("Spirit Cave MNI-NTAXA")
 
-#3.3 NTAXA and sample size (nrs=NTAXA spearmans rho).
-nrs<- read.table(text="
-                   NRSP NTAXA 
-                   44 10      
-                   373 31 
-                   113 13 
-                   107 22 
-                   1767 36 
-                   ", header=TRUE)
-nrs
-p.corr <-cor(nrs)
-p.corr
-p.corr.pval <- p.corr;
-for (i1 in 1:ncol(nrs)) {
-  for (i2 in 1:ncol(nrs)) {
-    p.corr.pval[i1,i2] <- cor.test(nrs[, i1], nrs[, i2])$p.value
-  }
-}
-p.corr.pval
-s.corr <- cor(nrs, method="spearman")
-s.corr
-nrs
-s.corr.pval <- p.corr;
-for (i1 in 1:ncol(nrs)) {
-  for (i2 in 1:ncol(nrs)) {
-    s.corr.pval[i1,i2] <- cor.test(nrs[, i1], nrs[, i2], method="spearman")$p.value
-  }
-}
-s.corr.pval
 
-#3.4 Plot Cook's distance and leverage.
-par(mfrow=c(1,2))
-plot(lm.nisp.ntaxa, which = c(4,6))
-######Ben-do you know how to change the names of the points in the latter plots so that they reflect the SC layers (1,2,2a,3,4)? It automatically plots them as 1,2,3,4,5.
+glm.mni.ntaxa <- glm(NTAX ~ MNI, data = scm, family = gaussian)
+glm.mni.ntaxa
+summary(glm.mni.ntaxa)
 ```
 
-```{r chi-square analysis}
-#4. Chi-square test between NISPs per layer at SC.
-#4.1 Chi-square test between Layer 4 and 3.
+
+```{r}
 scl4l3 <-
   matrix(c(2,2,1,7,22,3,189,1,5,56,1,10,4,7,1,21,2,1,0,0,
            3,0,2,0,2,0,44,125,131,0,1,4,2,14,8,1,2,1,7,8,3,1073,0,
@@ -219,10 +189,12 @@ scl2l1 <-
 scl2l1
 chisq.summary <- chisq.test(scl2l1, correct=FALSE)
 chisq.summary
+
 ```
 
 ```{r burnt bone spearmans rho analysis}
 #5. Analysis of burnt bone NISPs and sample size using Spearmans rho.
+>>>>>>> upstream/master
 burn <- read.table(text="
                   NISP NRSP
                   9 44     
@@ -252,6 +224,7 @@ for (i1 in 1:ncol(burn)) {
 }
 s.corr.pval
 ```
+
 
 ```{r session_info}
 # Computational environment and software dependencies for this analysis.
