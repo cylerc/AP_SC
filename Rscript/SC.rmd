@@ -31,22 +31,23 @@ library(dplyr)
 ```
 
 ```{r radiocarbon calibration}
+#1. Calibrate Spirit Cave radiocarbon dates. 
 dates <- read.csv("dates.csv",stringsAsFactors = FALSE, check.names = FALSE)
 dates
-#I want to calibrate this table of dates, but I can't figure out how to use the csv file to do it I've manually input them below
+#Ben-I want to calibrate this table of dates, but I can't figure out how to use the csv file to do it I've manually input them below
 ages=BchronCalibrate(ages=c(3042,2995,7400,7905,8550,8520,11350,9180,10910),
                      ageSds=c(37,40,300,390,200,290,560,360,580),
                      positions=c(1,1,1,2,2,`2a`,`3/4`,4,4),
                      calCurves="intcal13")
-#But I get this error: Error in BchronCalibrate(ages = c(3042, 2995, 7400, 7905, 8550, 8520,  : ages and calCurves should be of same length
+#...but I get this error: Error in BchronCalibrate(ages = c(3042, 2995, 7400, 7905, 8550, 8520,  : ages and calCurves should be of same length
 #Any thoughts on this?
 summary(ages)
-#Probably don't need to plot them for the paper, but looks like fun!
+#Should I include a plot for the paper???
 plot(ages,withDepths=TRUE)
 ```
 
 ```{r ratio NRSP-NISP calculation}
-##### Calculate ratios of NRSP/NISP per layer, then see if these are driven by sample size using a test of spearmans rho. 
+#2. Calculate ratios of NRSP/NISP per layer at SC. Analyze these values with Spearmans rhoto see if they are driven by sample size. 
 sc <- read.csv("sc.csv", stringsAsFactors = FALSE, check.names = FALSE)
 sc
 str(sc)
@@ -60,48 +61,25 @@ NRSP_NISP <- t(relative_abundance) # where does this 'relative_abundance' table 
 NRSP_NISP <- data_frame(`Layer` = row.names(NRSP/NISP), 
                         `NRSP/NISP` = NRSP_NISP[,1])
 
-
 #Then I need to take these ratios and use NRSP to run a spearmans rho analysis...
 
-
-###Everything below this is very messy and is the code I used when initially analyzing the data. I will clean it up, but I need to figure out how to do this NRSP-NISP command first since so much of the analyses below are similar...
+####Here is my cheating way without actually using the raw table...
+#Ratio stands for NISP/NRSP
+ratio <- read.table(text="
+Ratio NRSP
+1.38 44     
+1.45 372
+2.83 113
+3.96 107
+4.49 1766
+", header=TRUE)
 ```
 
-```{r}
-####### NISP and NRSP/NISP relationship spearmans rho ####
-site <- read.table(text="NISP bNISP 
-                   44 0         
-                   141 373    
-                   15 113  
-                   1 107  
-                   251 1767", header=TRUE)
-site
-p.corr <- cor(site)
-p.corr
-p.corr.pval <- p.corr
+```{r linear regression analysis}
+#3. Linear regression analysis of NISP to NTAXA, Cook's distance and leverage analysis of these values a and Spearmans rho test with sample size.
 
-for (i1 in 1:ncol(site)) {
-  for (i2 in 1:ncol(site)) {
-    p.corr.pval[i1,i2] <- cor.test(site[, i1], site[, i2])$p.value
-  }
-}
-p.corr.pval
-s.corr <- cor(site, method="spearman")
-s.corr
-site
-s.corr.pval <- p.corr;
-for (i1 in 1:ncol(site)) {
-  for (i2 in 1:ncol(site)) {
-    s.corr.pval[i1,i2] <- cor.test(site[, i1], site[, i2], method="spearman")$p.value
-  }
-}
-s.corr.pval
-```
-
-```{r}
-#2. Regression analysis of NISP-NTAXA
-##N-taxa driven by sample size? rs
-sc <- read.table(text="
+#3.1 NISP to NTAXA.
+scn <- read.table(text="
 NISP NTAXA
 44 10     
 372 29
@@ -109,14 +87,15 @@ NISP NTAXA
 107 20
 1766 34
 ", header=TRUE)
-sc
-plot(sc$NISP, sc$NTAXA, main="Spirit Cave NISP-NTAXA", xlab="NISP", ylab="NTAXA")
-lm.nisp.ntaxa<-lm((NTAXA)~(NISP), data=sc)
+scn
+plot(scn$NISP, scn$NTAXA, main="Spirit Cave NISP-NTAXA", xlab="NISP", ylab="NTAXA")
+abline(lm.nisp.ntaxa)
+lm.nisp.ntaxa<-lm((NTAXA)~(NISP), data=scn)
 lm.nisp.ntaxa
 summary(lm.nisp.ntaxa)
-abline(lm.nisp.ntaxa)
 
-scmni <- read.table(text="
+#3.2 MNI to NTAXA.
+scm <- read.table(text="
 MNI NTAXA
 10 10     
 42 29
@@ -124,75 +103,14 @@ MNI NTAXA
 17 20
 49 34
 ", header=TRUE)
-scmni
-lm.mni.ntaxa<-lm((NTAXA)~(MNI), data=scmni)
+scm
+plot(scm$MNI, scm$NTAXA, main="Spirit Cave MNI-NTAXA", xlab="MNI", ylab="NTAXA")
+abline(lm.mni.ntaxa)
+lm.mni.ntaxa<-lm((NTAXA)~(MNI), data=scm)
 lm.mni.ntaxa
 summary(lm.mni.ntaxa)
-plot((scmni$MNI), (scmni$NTAXA), main="Spirit Cave MNI-NTAXA", xlab="MNI", ylab="NTAXA")
-abline(lm.mni.ntaxa)
-```
-
-```{r}
-# Plot and first axis:
-plot(sc$NISP, sc$NTAXA,col="red",pch=16,axes=FALSE,main="Spirit Cave MNI-NTAXA", xlab="", ylab="NTAXA")
-axis(2,las=1)
-axis(1,line=1,col="red",col.ticks="red",col.axis="red")
-mtext("NISP",1,line=1,at=7,col="red")
-
-# Secondary points and axis:
-points((scmni$MNI), (scmni$NTAXA),pch=16, col="blue" )
-axis(1,0:11,labels=0:11*10,line=3,col="blue",col.ticks="blue",col.axis="blue")
-mtext("Label 2",1,line=3,at=0.2,col="blue")
-```
-
-```{r}
-scnm <- read.table(text="
-NISP MNI NTAXA
-44  10 10     
-372 42 29
-113 10 11
-107 17 20
-1766 49 34
-", header=TRUE)
-scnm
-```
 
 
-```{r}
-#Present and interpret residual plots
-par(mfrow=c(2,3))
-plot(lm.nisp.ntaxa, which = c(1,4,6))
-# residuals vs NISP
-plot(log(sc$NISP), lm.nisp.ntaxa$residuals, main="Residuals vs NISP")
-abline(h = 0, col = "gray75")
-qqPlot(lm.nisp.ntaxa$residuals, las = 1, id.n = 3, main="QQ Plot")
-# residuals vs order of data
-plot(lm.nisp.ntaxa$residuals, main="Residuals vs Order of data")
-abline(h = 0, col = "gray75")
-#Perform a Shapiro-Wilk test on the standardized residuals
-shapiro.test(lm.nisp.ntaxa$residuals)
-#1d.Present and interpret the ANOVA table and R2 value
-anova(lm.nisp.ntaxa)
-#1e.Present estimate table and estimated regression equation
-sum.lm.nisp.ntaxa <- summary(lm.nisp.ntaxa)
-sum.lm.nisp.ntaxa$coefficients
-est.beta1 <- sum.lm.nisp.ntaxa$coefficients[2,1]
-se.beta1 <- sum.lm.nisp.ntaxa$coefficients[2,2]
-sum.lm.nisp.ntaxa$fstatistic
-df.beta1 <- sum.lm.nisp.ntaxa$fstatistic[3]
-t.crit <- qt(1-0.05/2, df.beta1)
-t.crit
-CI.lower <- est.beta1 - t.crit * se.beta1
-CI.upper <- est.beta1 + t.crit * se.beta1
-c(CI.lower, CI.upper)
-```
-
-```{r}
-#3. Cooks distance and leverage
-#4. Chi-squared on NISPs per layer
-
-################Analyzing Chi-squared between layers at SC#############
-################Chi-squared test between Layer 4 and 3#################
 scl4l3 <-
   matrix(c(2,2,1,7,22,3,189,1,5,56,1,10,4,7,1,21,2,1,0,0,
            3,0,2,0,2,0,44,125,131,0,1,4,2,14,8,1,2,1,7,8,3,1073,0,
@@ -205,11 +123,9 @@ scl4l3 <-
                       "16","17","18","19","20","21","22","23","24","25","26","27","28","29","30",
                       "31","32","33","34","35","36","37","38","39","40","41","42","43")))
 scl4l3
-independence.test?
-
 chisq.summary <- chisq.test(scl4l3, correct=FALSE)
 chisq.summary
-####Chi-squared test between Layer 3 and 2a#### 
+#4.2 Chi-square test between Layer 3 and 2a.
 scl3l2a <-
   matrix(c(0,1,0,0,1,0,2,1,0,2,1,4,2,2,1,1,2,2,1,2,6,2,0,1,1,1,1,70,0,
            2,0,9,2,7,8,1,0,1,2,0,0,0,0,0,0,0,0,0,5,1,0,54,0,0,0,0,0,13),
@@ -221,7 +137,7 @@ scl3l2a <-
 scl3l2a
 chisq.summary <- chisq.test(scl3l2a, correct=FALSE)
 chisq.summary
-####Chi-squared test between Layer 2a and 2####
+#4.3 Chi-square test between Layer 2a and 2.
 scl2al2 <-
   matrix(c(2,9,2,7,0,8,1,0,0,1,2,0,0,0,0,0,0,0,0,0,0,0,0,5,1,54,0,0,0,0,8,0,13,
            0,0,21,104,14,23,4,2,3,1,4,2,1,1,1,2,1,2,1,4,2,4,4,3,6,0,1,2,1,1,51,43,63),
@@ -234,7 +150,7 @@ scl2al2 <-
 scl2al2
 chisq.summary <- chisq.test(scl2al2, correct=FALSE)
 chisq.summary
-####Chi-squared test between Layer 2 and 1####
+#4.4 Chi-square test between Layer 2 and 1.
 scl2l1 <-
   matrix(c(21,104,14,23,4,2,3,1,4,2,1,1,1,2,1,2,1,4,2,4,4,3,6,0,0,0,0,1,2,1,1,51,43,63,
            10,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,2,0,1,2,4,1,1,0,0,0,10,0,10),
@@ -248,67 +164,14 @@ scl2l1
 chisq.summary <- chisq.test(scl2l1, correct=FALSE)
 chisq.summary
 
-#5. Burning NISPs related to sample size? rs
-#6. Bat abundance driven by sample size? rs
 ```
 
-```{r}
-###########Spearman Rank correlation between total bat NISP and NRSP####
-bat <- read.table(text="
-NISP NRSP
-0 44     
-141 373
-15 113
-1 107
-251 1767
-", header=TRUE)
-bat
-p.corr <-cor(bat)
-p.corr
-p.corr.pval <- p.corr;
-for (i1 in 1:ncol(bat)) {
-for (i2 in 1:ncol(bat)) {
-p.corr.pval[i1,i2] <- cor.test(bat[, i1], bat[, i2])$p.value
-}
-}
-p.corr.pval
-s.corr <- cor(bat, method="spearman")
-s.corr
-bat
-s.corr.pval <- p.corr;
-for (i1 in 1:ncol(bat)) {
-  for (i2 in 1:ncol(bat)) {
-    s.corr.pval[i1,i2] <- cor.test(bat[, i1], bat[, i2], method="spearman")$p.value
-  }
-}
-s.corr.pval
-```
-
-```{r}
-###############1/D
-simp <- read.table(text="
-Layer Evenness
-1 4.16     
-2 4.49
-2a 5.03
-3 14.29
-4 3.38
-", header=TRUE)
-simp
-attach(simp)
-plot(Layer, Evenness, type="p")
-library(ggplot2)
-ggplot(simp.long, aes(Evenness, group=1)) + 
-  geom_point () + 
-  geom_line()
-```
-
-
-```{r}
-#########Burning and correlation with sample size#####
+```{r burnt bone spearmans rho analysis}
+#5. Analysis of burnt bone NISPs and sample size using Spearmans rho.
+>>>>>>> upstream/master
 burn <- read.table(text="
-NISP NRSP
-9 44     
+                  NISP NRSP
+                  9 44     
                   72 373
                   16 113
                   30 107
@@ -336,71 +199,32 @@ for (i1 in 1:ncol(burn)) {
 s.corr.pval
 ```
 
-```{r}
-#########NISP and NTAXA rank#####
-site <- read.table(text="
-                   NISP NTAXA 
-                   44 10      
-                   373 31 
-                   113 13 
-                   107 22 
-                   1767 36 
-                   ", header=TRUE)
-site
-p.corr <-cor(site)
-p.corr
-p.corr.pval <- p.corr;
-for (i1 in 1:ncol(site)) {
-  for (i2 in 1:ncol(site)) {
-    p.corr.pval[i1,i2] <- cor.test(site[, i1], site[, i2])$p.value
-  }
-}
-p.corr.pval
-s.corr <- cor(site, method="spearman")
-s.corr
-site
-s.corr.pval <- p.corr;
-for (i1 in 1:ncol(site)) {
-  for (i2 in 1:ncol(site)) {
-    s.corr.pval[i1,i2] <- cor.test(site[, i1], site[, i2], method="spearman")$p.value
-  }
-}
-s.corr.pval
+
+```{r session_info}
+# Computational environment and software dependencies for this analysis.
+sessionInfo()
 ```
 
-```{r}
-#####Plots 
-sc
-plot(log(sc$NISP), log(sc$NTAXA), main="Spirit Cave log(NISP-NTAXA)", xlab="log(NISP)", ylab="log(NTAXA)")
-abline(lm.nisp.ntaxa)
-#Present and interpret residual plots
-par(mfrow=c(1,2))
-plot(lm.nisp.ntaxa, which = c(4,6))
-library(car)
-qqPlot(lm.nisp.ntaxa$residuals, las = 1, id.n = 3, main="QQ Plot")
-hist(lm.nisp.ntaxa$residuals, breaks=5, main="Residuals")
-```
+LICENSE
+ 
+The MIT License (MIT)
 
+Copyright (c) 2015 Cyler Conrad
 
-```{r}
-#Perform a Shapiro-Wilk test on the standardized residuals
-shapiro.test(lm.nisp.ntaxa$residuals)
-#1d.Present and interpret the ANOVA table and R2 value
-anova(lm.nisp.ntaxa)
-summary(lm.nisp.ntaxa)
-#1e.Present estimate table and estimated regression equation
-sum.lm.nisp.ntaxa <- summary(lm.nisp.ntaxa)
-sum.lm.nisp.ntaxa$coefficients
-est.beta1 <- sum.lm.nisp.ntaxa$coefficients[2,1]
-se.beta1 <- sum.lm.nisp.ntaxa$coefficients[2,2]
-sum.lm.nisp.ntaxa$fstatistic
-df.beta1 <- sum.lm.nisp.ntaxa$fstatistic[3]
-t.crit <- qt(1-0.05/2, df.beta1)
-t.crit
-CI.lower <- est.beta1 - t.crit * se.beta1
-CI.upper <- est.beta1 + t.crit * se.beta1
-c(CI.lower, CI.upper)
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-```
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
-
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
