@@ -1,0 +1,56 @@
+Taxonomic Classification,Common Name,Layer 1,Layer 2,Layer 2a,Layer 3,Layer 4
+Arthropoda,Insect,,,,,1
+Bivalvia,Bivalve,,,,,1
+Margaritifera laosensis,Freshwater Bivalve,,,1,,2
+Gastropoda,Gastropod,,,1,,1
+Cyclophorus sp. ,Operculated Land Snail,,,,1,3
+Indochinamon sp. ,Freshwater Crab,3,6,1,,1
+Chiroptera,Bats,,,,1,
+Hipposideros bicolor,Bicolored Roundleaf Bat,,,,,1
+Hipposideros larvatus,Intermediate Roundleaf Bat,,5,,,1
+Hipposideros sp. ,Roundleaf Bat,,10,3,,10
+Sus sp. ,Wild Boar,,1,1,1,1
+Muntiacus sp. ,Muntjac Deer,,1,,1,1
+Axis porcinus,Hog Deer,,1,,,
+Rusa unicolor,Sambar Deer,,1,1,,1
+Rodentia,Rodents,,1,1,1,1
+Sciuridae,Squirrels,1,1,,,1
+Ratufa sp. ,Giant Squirrel,,1,,,
+Muridae,Rats and Mice,,,,1,1
+Lepus cf. peguensis,Burmese Hare,,1,,,
+Carnivora,Carnivores,,1,,1,1
+Lutra sp. ,River Otter,,,,1,
+Viverridae,Civets,,1,,,
+Arctictis binturong,Binturong,,,,1,
+Canidae,Jackal/Dhole,,,,1,1
+Hystricidae cf. ,Porcupine,,1,,1,
+Felidae,Leopard/Tiger/Cat,,1,,,1
+Felis sp. ,Cat,,1,,,
+Primate,Primates,,,,,1
+Nycticebus sp. ,Slow Loris,,1,,1,
+Macaca sp. ,Macaque,,1,,1,1
+Macaca cf. sp. ,Macaque,,1,,,
+Hylobates lar,Lar Gibbon,,1,,1,
+Homo sapiens sapiens,Human,,1,,,
+"Mammalia, small",Small Mammal,,,,,
+"Mammalia, medium",Medium Mammal,,,,,
+"Mammalia, large",Large Mammal,,,,,
+"Mammalia, indeterminate",Mammal,,,,,
+Avian,Birds,1,,,,
+Passeriformes,Passerine,1,,,,
+Phasianidae,Phasianid,,,,,1
+Reptilia,Reptiles,,,,1,2
+Testudinidae,Tortoise,,,,1,1
+Geoemydidae,Hard-Shelled Turtles,1,1,,1,1
+Indotestudo elongata,Elongated Tortoise,1,,,,1
+Siebenrockiella crassicollis,Black Marsh Turtle,1,,,,
+Varanus sp. ,Monitor Lizard,,,,,1
+Serpentes ,Snakes,,1,,,1
+Pythonidae,Pythons,,,,,1
+Anura,Frogs,,1,,,1
+Anura cf. ,Frogs,,,,,5
+Cyprinidae,Barbs and Carps,1,,1,,1
+"Vertebrate, small/medium",Small/Medium Vertebrate,,,,,
+Vertebrate,Vertebrate,,,,,
+Indeterminate,Indeterminate ,,,,,
+Crinoidea,Fossil Crinoid,,,,,1

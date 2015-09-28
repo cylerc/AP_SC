@@ -222,10 +222,15 @@ my_chi_sqs <- list(sc_layer_1_and_2_chisq.summary,
                      sc_layer_3_and_2a_chisq.summary,
                      sc_layer_3_and_4_chisq.summary)
 
+# extract chi-sq, df, and p-values into a table
 my_chi_sqs_df <- ldply(my_chi_sqs, function(i) c(unname(i$statistic), unname(i$parameter),  i$p.value))
+# add col names
 names(my_chi_sqs_df) <- c('chi-sq', 'df', 'p')
+# add row names
 my_chi_sqs_df$layers <- c("1_and_2", "2_and_2a", "2a_and_3", "3_and_4")
+# rearrange the cols to put names first
 my_chi_sqs_df <- my_chi_sqs_df[,c(4,1:3)]
+# show the table
 my_chi_sqs_df
 ```
 
