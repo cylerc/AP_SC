@@ -104,9 +104,9 @@ ggplot(scn, aes(NISP, NTAXA)) +
   theme_minimal() +
   ggtitle("Spirit Cave NISP-NTAXA")
 
-lm.nisp.ntaxa <- lm((NTAXA)~(NISP), data=scn)
-lm.nisp.ntaxa
-summary(lm.nisp.ntaxa)
+glm.nisp.ntaxa <- glm((NTAXA)~(NISP), data=scn)
+glm.nisp.ntaxa
+summary(glm.nisp.ntaxa)
 ```
 
 ```{r linear regression analysis 2}
@@ -130,9 +130,9 @@ ggplot(scm, aes(MNI, NTAXA)) +
   ggtitle("Spirit Cave MNI-NTAXA")
 
 
-lm.mni.ntaxa <- lm((NTAXA)~(MNI), data=scm)
-lm.mni.ntaxa
-summary(lm.mni.ntaxa)
+glm.mni.ntaxa <- glm((NTAXA)~(MNI), data=scm)
+glm.mni.ntaxa
+summary(glm.mni.ntaxa)
 ```
 
 
