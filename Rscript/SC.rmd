@@ -108,7 +108,9 @@ glm.nisp.ntaxa_summary_t <- round(glm.nisp.ntaxa_summary$coefficients[3], 3)
 glm.nisp.ntaxa_summary_p <- round(glm.nisp.ntaxa_summary$coefficients[4], 3)
 
 # cook's distance
+tiff("figures/Figure6.tif", res=600, compression = "lzw", height=5, width=5, units="in") # save as high resolution tif
 plot(glm.nisp.ntaxa, which=5) 
+dev.off()
 
 # r-squared values, from https://stat.ethz.ch/pipermail/r-help/2010-June/243113.html
 
