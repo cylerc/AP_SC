@@ -53,8 +53,10 @@ ages_densities <- BchronDensity(ages = dates$Ages,
 ```
 
 ```{r}
-par(mfrow=c(1,1)) # reset so that the next plot is normal sized. 
+par(mfrow=c(1,1)) # reset so that the next plot is normal sized.
+tiff("figures/Figure4.tif", res=600, compression = "lzw", height=5, width=5, units="in") # save as high resolution tif
 plot(ages_densities, xlab='Age (cal years BP)')
+dev.off()
 ```
 
 ```{r ratio NRSP-NISP calculation}
