@@ -104,7 +104,7 @@ ggplot(scn, aes(NISP, NTAXA)) +
   theme_minimal() +
   ggtitle("Spirit Cave NISP-NTAXA")
 
-glm.nisp.ntaxa <- glm((NTAXA)~(NISP), data=scn)
+glm.nisp.ntaxa <- glm(NTAXA ~ NISP, data = scn, family = gaussian)
 glm.nisp.ntaxa
 summary(glm.nisp.ntaxa)
 ```
@@ -130,7 +130,7 @@ ggplot(scm, aes(MNI, NTAXA)) +
   ggtitle("Spirit Cave MNI-NTAXA")
 
 
-glm.mni.ntaxa <- glm((NTAXA)~(MNI), data=scm)
+glm.mni.ntaxa <- glm(NTAX ~ MNI, data = scm, family = gaussian)
 glm.mni.ntaxa
 summary(glm.mni.ntaxa)
 ```
