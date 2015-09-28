@@ -82,7 +82,7 @@ Ratio NRSP
 ", header=TRUE)
 ```
 
-```{r linear regression analysis}
+```{r linear regression analysis 1 }
 #3. Linear regression analysis of NISP to NTAXA, Cook's distance and leverage analysis of these values a and Spearmans rho test with sample size.
 
 #3.1 NISP to NTAXA.
@@ -94,13 +94,22 @@ NISP NTAXA
 107 20
 1766 34
 ", header=TRUE)
+
 scn
-plot(scn$NISP, scn$NTAXA, main="Spirit Cave NISP-NTAXA", xlab="NISP", ylab="NTAXA")
-abline(lm.nisp.ntaxa)
-lm.nisp.ntaxa<-lm((NTAXA)~(NISP), data=scn)
+
+# I prefer ggplot
+ggplot(scn, aes(NISP, NTAXA)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  ggtitle("Spirit Cave NISP-NTAXA")
+
+lm.nisp.ntaxa <- lm((NTAXA)~(NISP), data=scn)
 lm.nisp.ntaxa
 summary(lm.nisp.ntaxa)
+```
 
+```{r linear regression analysis 2}
 #3.2 MNI to NTAXA.
 scm <- read.table(text="
 MNI NTAXA
@@ -110,14 +119,24 @@ MNI NTAXA
 17 20
 49 34
 ", header=TRUE)
+
 scm
-plot(scm$MNI, scm$NTAXA, main="Spirit Cave MNI-NTAXA", xlab="MNI", ylab="NTAXA")
-abline(lm.mni.ntaxa)
-lm.mni.ntaxa<-lm((NTAXA)~(MNI), data=scm)
+
+# I prefer ggplot
+ggplot(scm, aes(MNI, NTAXA)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  ggtitle("Spirit Cave MNI-NTAXA")
+
+
+lm.mni.ntaxa <- lm((NTAXA)~(MNI), data=scm)
 lm.mni.ntaxa
 summary(lm.mni.ntaxa)
+```
 
 
+```{r}
 scl4l3 <-
   matrix(c(2,2,1,7,22,3,189,1,5,56,1,10,4,7,1,21,2,1,0,0,
            3,0,2,0,2,0,44,125,131,0,1,4,2,14,8,1,2,1,7,8,3,1073,0,
