@@ -34,9 +34,6 @@ library(viridis)
 #1. Calibrate Spirit Cave radiocarbon dates. 
 dates <- read.csv("dates.csv",stringsAsFactors = FALSE, check.names = FALSE)
 dates
-#1. Calibrate Spirit Cave radiocarbon dates. 
-dates <- read.csv("dates.csv",stringsAsFactors = FALSE, check.names = FALSE)
-dates
 ages <- BchronCalibrate(ages = dates$Ages,
                      ageSds = dates$ageSds,
                      positions = c(1,1,1,2,2,"2a","3/4",4,4),
@@ -66,6 +63,7 @@ NISP <- sc[c(1:33,37:50), -1]
 NRSP <- colSums(sc[ ,-1])
 NRSP_NISP <-  NISP / NRSP
 NRSP_NISP <- t(relative_abundance) # what is this?
+#This was my attempt to emulate the code you helped write for the turkey JASR paper! It is not needed here. 
 NRSP_NISP <- data_frame(Layer = row.names(NRSP/NISP), 
                         `NRSP/NISP` = NRSP_NISP[,1])
 #Then I need to take these ratios and use NRSP to run a spearmans rho analysis...
@@ -82,6 +80,9 @@ Ratio NRSP
 ", header=TRUE)
 ```
 
+#To measure sample size bias we calculate a generalized linear model between both NISP and NTAXA (taxonomic abundance) and MNI and NTAXA per layer (Grayson and Delpech 1998; Lyman 2008:149-152). If a significant (at 95%) relationship is present then this suggests that sample size biases occur equally throughout the assemblage. A non-significant relationship indicates biases are present between layers.
+#Analysis of Cook’s distance and leverage also provides inference into potential issues with sample size (Chatterjee and Hadi 1986). Cook’s distance identifies which samples have the greatest influence in a regression analysis; leverage examines which samples are the furthest from predicted values. Lastly, we use chi-square to test for differences in taxonomic composition between layers at Spirit Cave based on NISP. If subsistence strategies remain the same at Spirit Cave throughout each layer then we expect no significant difference in the chi-square analysis. 
+
 ```{r linear regression analysis 1 }
 #3. Linear regression analysis of NISP to NTAXA, Cook's distance and leverage analysis of these values a and Spearmans rho test with sample size.
 
@@ -97,7 +98,6 @@ NISP NTAXA
 
 scn
 
-# I prefer ggplot
 ggplot(scn, aes(NISP, NTAXA)) +
   geom_point(size = 3) +
   geom_smooth(method = "glm") +
@@ -122,7 +122,6 @@ MNI NTAXA
 
 scm
 
-# I prefer ggplot
 ggplot(scm, aes(MNI, NTAXA)) +
   geom_point(size = 3) +
   geom_smooth(method = "glm") +
@@ -130,13 +129,16 @@ ggplot(scm, aes(MNI, NTAXA)) +
   ggtitle("Spirit Cave MNI-NTAXA")
 
 
-glm.mni.ntaxa <- glm(NTAX ~ MNI, data = scm, family = gaussian)
+glm.mni.ntaxa <- glm(NTAXA ~ MNI, data = scm, family = gaussian)
 glm.mni.ntaxa
 summary(glm.mni.ntaxa)
 ```
 
+#Generalized linear modeling suggests that sample size bias is occurring at the site (t=2.258, p=0.04). There is a significant relationship between MNI and NTAXA (t=7.592, p=0.005) suggesting that as sample size increases, MNI also increases. NTAXA is also significantly driven by sample size (rs=0.9, p=0.02). Analysis of Cook’s distance and leverage indicates that layer 4 is influencing the regression relationship and is furthest from the predicted values (Figure 5). Given that layer 4 is most fragmented and has the most unidentifiable specimens, this suggests that bones from layer 4 closely represent the original sample excavated from Spirit Cave. Finally, chi-squared statistics show that every subsequent layer at Spirit Cave is significantly different (Table 5). Since sample size biases are present, these patterns are likely not driven by forager subsistence strategies.
 
-```{r}
+
+```{r chi-square analysis}
+#4.1 Chi-square test between Layer 4 and 3.
 scl4l3 <-
   matrix(c(2,2,1,7,22,3,189,1,5,56,1,10,4,7,1,21,2,1,0,0,
            3,0,2,0,2,0,44,125,131,0,1,4,2,14,8,1,2,1,7,8,3,1073,0,
@@ -189,7 +191,6 @@ scl2l1 <-
 scl2l1
 chisq.summary <- chisq.test(scl2l1, correct=FALSE)
 chisq.summary
-
 ```
 
 ```{r burnt bone spearmans rho analysis}
