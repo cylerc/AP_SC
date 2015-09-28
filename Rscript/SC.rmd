@@ -27,23 +27,31 @@ library(car)
 library(ggplot2)
 library(reshape2)
 library(dplyr)
-
+library(viridis)
 ```
 
 ```{r radiocarbon calibration}
 #1. Calibrate Spirit Cave radiocarbon dates. 
 dates <- read.csv("dates.csv",stringsAsFactors = FALSE, check.names = FALSE)
 dates
-#Ben-I want to calibrate this table of dates, but I can't figure out how to use the csv file to do it I've manually input them below
-ages=BchronCalibrate(ages=c(3042,2995,7400,7905,8550,8520,11350,9180,10910),
-                     ageSds=c(37,40,300,390,200,290,560,360,580),
-                     positions=c(1,1,1,2,2,`2a`,`3/4`,4,4),
-                     calCurves="intcal13")
-#...but I get this error: Error in BchronCalibrate(ages = c(3042, 2995, 7400, 7905, 8550, 8520,  : ages and calCurves should be of same length
-#Any thoughts on this?
+#1. Calibrate Spirit Cave radiocarbon dates. 
+dates <- read.csv("dates.csv",stringsAsFactors = FALSE, check.names = FALSE)
+dates
+ages <- BchronCalibrate(ages = dates$Ages,
+                     ageSds = dates$ageSds,
+                     positions = c(1,1,1,2,2,"2a","3/4",4,4),
+                     calCurves = rep("intcal13", length(dates$Ages)))
 summary(ages)
-#Should I include a plot for the paper???
-plot(ages,withDepths=TRUE)
+# see all calibrated dates
+par(mfrow=c(3, 3)) # set up a grid of 3x3 plots
+plot(ages) # put all the plots on that grid
+
+# or better, we can combine all the calibrated dates into a single plot, like this: 
+ages_densities <- BchronDensity(ages = dates$Ages,
+                     ageSds = dates$ageSds,
+                     calCurves = rep("intcal13", length(dates$Ages)))
+# this is the plot that should go in the paper
+plot(ages_densities, xlab='Age (cal years BP)')
 ```
 
 ```{r ratio NRSP-NISP calculation}
@@ -54,13 +62,12 @@ str(sc)
 
 #Okay, so I need to take the NISP totals (excluding rows 33-36,51-53) and column totals (NRPS) then divide...
 
-NISP <- sc[c(1:33,37:50), -1] # here we exclude rows 33-36 and 51-53, exclude column of taxon names
-NRSP <- colSums(sc[ ,-1]) # exclude column of taxon names
+NISP <- sc[c(1:33,37:50), -1]
+NRSP <- colSums(sc[ ,-1])
 NRSP_NISP <-  NISP / NRSP
-NRSP_NISP <- t(relative_abundance) # where does this 'relative_abundance' table come from?
-NRSP_NISP <- data_frame(`Layer` = row.names(NRSP/NISP), 
+NRSP_NISP <- t(relative_abundance) # what is this?
+NRSP_NISP <- data_frame(Layer = row.names(NRSP/NISP), 
                         `NRSP/NISP` = NRSP_NISP[,1])
-
 #Then I need to take these ratios and use NRSP to run a spearmans rho analysis...
 
 ####Here is my cheating way without actually using the raw table...
