@@ -100,7 +100,7 @@ scn
 # I prefer ggplot
 ggplot(scn, aes(NISP, NTAXA)) +
   geom_point(size = 3) +
-  geom_smooth(method = "lm") +
+  geom_smooth(method = "glm") +
   theme_minimal() +
   ggtitle("Spirit Cave NISP-NTAXA")
 
@@ -125,7 +125,7 @@ scm
 # I prefer ggplot
 ggplot(scm, aes(MNI, NTAXA)) +
   geom_point(size = 3) +
-  geom_smooth(method = "lm") +
+  geom_smooth(method = "glm") +
   theme_minimal() +
   ggtitle("Spirit Cave MNI-NTAXA")
 
