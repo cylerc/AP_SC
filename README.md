@@ -5,7 +5,7 @@ Author of this repository: Cyler Norman Conrad (cylerc@unm.edu)
 
 This repository contains R scripts to create figures and analyze data for the Spirit Cave, Thailand zooarchaeological assemblage.
 
-Written by Cyler Conrad, Department of Anthropology, University of New Mexico
+Written by Cyler Conrad, Department of Anthropology, University of New Mexico & Ben Marwick, Department of Anthropology, University of Washington 
 
 Results described in:
 
@@ -19,7 +19,7 @@ License:
 
 The MIT License (MIT)
 
-Copyright (c) 2015 Cyler Conrad
+Copyright (c) 2015 Cyler Conrad & Ben Marwick
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

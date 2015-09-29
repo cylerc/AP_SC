@@ -40,7 +40,10 @@ ages <- BchronCalibrate(ages = dates$Ages,
                      ageSds = dates$ageSds,
                      positions = c(1,1,1,2,2,"2a","3/4",4,4),
                      calCurves = rep("intcal13", length(dates$Ages)))
-# see all calibrated dates
+# show tables of calibrated age ranges for each date
+summary(ages)
+
+# see plots of all calibrated dates
 par(mfrow=c(3, 3)) # set up a grid of 3x3 plots
 plot(ages) # put all the plots on that grid
 ```
@@ -57,6 +60,9 @@ par(mfrow=c(1,1)) # reset so that the next plot is normal sized.
 tiff("figures/Figure4.tif", res=600, compression = "lzw", height=5, width=5, units="in") # save as high resolution tif
 plot(ages_densities, xlab='Age (cal years BP)')
 dev.off()
+
+# and show the plot when we knit this
+plot(ages_densities, xlab='Age (cal years BP)')
 ```
 
 ```{r ratio NRSP-NISP calculation}
@@ -111,6 +117,8 @@ glm.nisp.ntaxa_summary_p <- round(glm.nisp.ntaxa_summary$coefficients[4], 3)
 tiff("figures/Figure6.tif", res=600, compression = "lzw", height=5, width=5, units="in") # save as high resolution tif
 plot(glm.nisp.ntaxa, which=5) 
 dev.off()
+# and show when knit
+plot(glm.nisp.ntaxa, which=5) 
 
 # r-squared values, from https://stat.ethz.ch/pipermail/r-help/2010-June/243113.html
 
