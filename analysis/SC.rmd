@@ -1,0 +1,319 @@
+## R code for analysis of the Spirit Cave faunal data.
+
+Cyler Conrad, Department of Anthropology, University of New Mexico, cylerc@unm.edu
+
+Ben Marwick, Department of Anthropology, University of Washington, bmarwick@uw.edu
+
+This document contain R code to reproduce the plots and statistical analysis presented in 
+
+> Conrad, C., Higham, C. and Eda, M. (in press) Paleoecology and Forager Subsistence Strategies During the Pleistocene-Holocene Transition: A Reinvestigation of the Zooarchaeological Assemblage from Spirit Cave, Mae Hong Son Province, Thailand. Asian Perspectives. 
+
+All data required to perform the analyses can be found at the University of New Mexico digital electronic repository (Conrad 2015). The development version of this document can be found at https://github.com/cylerc/AP_SC
+
+Details of the computational environment and software dependencies are listed at the end of this document. 
+
+References: 
+Conrad, C. 2015. Archaeological Databases for Spirit Cave, Mae Hong Son Province, Thailand  [dataset]. University of New Mexico. http://repository.unm.edu/handle/1928/26730
+
+```{r setup}
+# set the base directory for knitr to the directory above this one
+# install.packages(c("knitr", "Bchron", "car", "ggplot2", "reshape2", "dplyr"))
+library(knitr)
+opts_knit$set(root.dir = '../', progress = FALSE)
+```
+
+```{r load_libraries, message = FALSE, warning = FALSE}
+# see the output of sessionInfo() at the bottom for package version numbers
+library(Bchron)
+library(car)
+library(ggplot2)
+library(reshape2)
+library(plyr)
+library(dplyr)
+library(viridis)
+```
+
+```{r radiocarbon calibration}
+# 1. Calibrate Spirit Cave radiocarbon dates. 
+dates <- read.csv("data/dates.csv", stringsAsFactors = FALSE, check.names = FALSE)
+ages <- BchronCalibrate(ages = dates$Ages,
+                     ageSds = dates$ageSds,
+                     positions = c(1,1,1,2,2,"2a","3/4",4,4),
+                     calCurves = rep("intcal13", length(dates$Ages)))
+# show tables of calibrated age ranges for each date
+summary(ages)
+
+# see plots of all calibrated dates
+par(mfrow=c(3, 3)) # set up a grid of 3x3 plots
+plot(ages) # put all the plots on that grid
+```
+
+```{r, results = 'hide'} 
+# combine all the calibrated dates into a single plot (using results = 'hide' to hide the progress bar)
+ages_densities <- BchronDensity(ages = dates$Ages,
+                     ageSds = dates$ageSds,
+                     calCurves = rep("intcal13", length(dates$Ages)))
+```
+
+```{r}
+par(mfrow=c(1,1)) # reset so that the next plot is normal sized.
+tiff("analysis/figures/Figure4.tif", res=600, compression = "lzw", height=5, width=5, units="in") # save as high resolution tif
+plot(ages_densities, xlab='Age (cal years BP)')
+dev.off()
+
+# and show the plot when we knit this
+plot(ages_densities, xlab='Age (cal years BP)')
+```
+
+```{r ratio NRSP-NISP calculation}
+#2. Calculate ratios of NRSP/NISP per layer at SC. Analyze these values with Spearmans rho to see if they are driven by sample size. 
+sc <- read.csv("data/sc.csv", stringsAsFactors = FALSE, check.names = FALSE)
+
+# calculates NISPs per layer without the Mammalia, sm/md/lg/intermediate, Vertebrate sm/md, indeterminate and Indeterminate values, and column totals.
+
+NISP <- sc[c(1:32,37:50), -1]
+row.names(NISP) <- sc$Taxon[c(1:32,37:50)]
+
+# compute NRSP (total number of specimens)
+
+NRSP <- unname(colSums(sc[ ,-1]))
+
+# and now the ratio of NRSP to NISP
+
+NRSP_NISP <-  NRSP / colSums(NISP) 
+
+# spearman's rho on the ratios to sample size
+NRSP_NISP_cor <- cor.test(NRSP, unname(colSums(NISP)), method = 'spearman')
+NRSP_NISP_cor_r <-  unname(NRSP_NISP_cor$estimate)
+NRSP_NISP_cor_p <-  round(NRSP_NISP_cor$p.value, 3)
+```
+
+The Spearman's rho values for the NRSP/NISP to sample size relationship are:
+
+r = `r NRSP_NISP_cor_r`  
+p = `r NRSP_NISP_cor_p`
+
+
+```{r NTAXA and sample size effects}
+
+# compute NTAXA
+
+NTAXA <- unname(colSums(sc!= 0))[-1]
+
+# spearman's rho on the NTAXA to sample size
+NTAXA_cor <- cor.test(NTAXA, unname(colSums(NISP)), method = 'spearman')
+NTAXA_cor_r <-  unname(NTAXA_cor$estimate)
+NTAXA_cor_p <-  round(NTAXA_cor$p.value, 3)
+```
+
+The Spearman's rho values for the NTAXA to sample size relationship are:
+
+r = `r NTAXA_cor_r`  
+p = `r NTAXA_cor_p`
+
+```{r linear regression analysis 1 }
+#3. Linear regression analysis of NISP to NTAXA, Cook's distance and leverage analysis of these values and Spearmans rho test with sample size.
+
+# NISP to NTAXA
+
+scn <-  data_frame(NISP = colSums(NISP),
+                   NTAXA = NTAXA)
+
+ggplot(scn, aes(NISP, NTAXA)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "glm") +
+  theme_minimal() +
+  ggtitle("Spirit Cave NISP-NTAXA")
+
+# GLM with poisson 
+glm.nisp.ntaxa.p <- glm(NTAXA ~ NISP, data = scn, family = poisson)
+
+# chi-sqi to check goodness of fit
+pchisq(summary(glm.nisp.ntaxa.p)$deviance, 
+       summary(glm.nisp.ntaxa.p)$df.residual)
+# if >0.05, then model gives a good fit. 
+
+summary(glm.nisp.ntaxa.p)
+glm.nisp.ntaxa_summary <- summary(glm.nisp.ntaxa.p)
+glm.nisp.ntaxa_summary_t <- round(glm.nisp.ntaxa_summary$coefficients[3], 3)
+glm.nisp.ntaxa_summary_p <- round(glm.nisp.ntaxa_summary$coefficients[4], 3)
+
+# cook's distance
+tiff("analysis/figures/Figure6.tif", res=600, compression = "lzw", height=5, width=5, units="in") # save as high resolution tif
+plot(glm.nisp.ntaxa.p, which=5) 
+dev.off()
+# and show when knit
+plot(glm.nisp.ntaxa.p, which=5) 
+
+# r-squared values, from https://stat.ethz.ch/pipermail/r-help/2010-June/243113.html
+
+# possibility 1
+glm.nisp.ntaxa_summary_p_r2 <- cor(NTAXA, predict(glm.nisp.ntaxa.p))^2
+
+# possibility 2
+# glm.nisp.ntaxa_summary_p_r2 <- 1 - (sum((NTAXA - predict(glm.nisp.ntaxa.p))^2) / sum((NTAXA - mean(NTAXA))^2))
+```
+
+The GLM values for the NTAXA to NISP relationship are:
+
+t = `r glm.nisp.ntaxa_summary_t`  
+p = `r glm.nisp.ntaxa_summary_p`  
+r-squared = `r glm.nisp.ntaxa_summary_p_r2`  
+
+
+```{r linear regression analysis 2}
+#3.2 MNI to NTAXA.
+MNI <- read.csv("data/MNI.csv", stringsAsFactors = FALSE, check.names = FALSE)
+MNI <- colSums(MNI[,3:7], na.rm = TRUE)
+
+scm <- data_frame(MNI = unname(MNI), 
+                  NTAXA = NTAXA)
+
+ggplot(scm, aes(MNI, NTAXA)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "glm") +
+  theme_minimal() +
+  ggtitle("Spirit Cave MNI-NTAXA")
+
+# GLM with poisson 
+glm.mni.ntaxa.p <- glm(NTAXA ~ MNI, data = scm, family = poisson)
+
+# chi-sqi to check goodness of fit
+pchisq(summary(glm.mni.ntaxa.p)$deviance, 
+       summary(glm.mni.ntaxa.p)$df.residual)
+# if >0.05, then model gives a good fit. 
+
+
+summary(glm.mni.ntaxa.p)
+glm.mni.ntaxa_summary <- summary(glm.mni.ntaxa.p)
+glm.mni.ntaxa_summary_t <- round(glm.mni.ntaxa_summary$coefficients[3], 3)
+glm.mni.ntaxa_summary_p <- round(glm.mni.ntaxa_summary$coefficients[4], 3)
+
+# cook's distance
+plot(glm.mni.ntaxa.p, which = 5)
+
+# r-squared values, from https://stat.ethz.ch/pipermail/r-help/2010-June/243113.html
+
+# possibility 1
+glm.mni.ntaxa_r2 <- cor(NTAXA, predict(glm.mni.ntaxa.p))^2
+
+# possibility 2
+# glm.mni.ntaxa_r2 <- 1 - (sum((NTAXA - predict(glm.mni.ntaxa.p))^2) / sum((NTAXA - mean(NTAXA))^2))
+```
+
+The GLM values for the NTAXA to MNI relationship are:
+
+t = `r glm.mni.ntaxa_summary_t`  
+p = `r glm.mni.ntaxa_summary_p`  
+r-squared = `r glm.mni.ntaxa_r2`
+
+
+
+```{r chi-square analysis}
+# 4.1 Chi-square test between Layer 4 and 3.
+
+sc_layer_3_and_4 <-  as.data.frame((sc[, 5:6]))
+
+# exclude taxa with no counts
+sc_layer_3_and_4 <- sc_layer_3_and_4[!rowSums(sc_layer_3_and_4) == 0, ]
+
+# compute chi-sq
+sc_layer_3_and_4_chisq.summary <- chisq.test(t(sc_layer_3_and_4), correct = FALSE)
+
+# 4.2 Chi-square test between Layer 3 and 2a.
+
+sc_layer_3_and_2a <-  as.data.frame((sc[, 4:5]))
+
+# exclude taxa with no counts
+sc_layer_3_and_2a <- sc_layer_3_and_2a[!rowSums(sc_layer_3_and_2a) == 0, ]
+
+# compute chi-sq
+sc_layer_3_and_2a_chisq.summary <- chisq.test(t(sc_layer_3_and_2a), correct = FALSE)
+
+# 4.3 Chi-square test between Layer 2a and 2.
+
+sc_layer_2_and_2a <-  as.data.frame((sc[, 3:4]))
+
+# exclude taxa with no counts
+sc_layer_2_and_2a <- sc_layer_2_and_2a[!rowSums(sc_layer_2_and_2a) == 0, ]
+
+# compute chi-sq
+sc_layer_2_and_2a_chisq.summary <- chisq.test(t(sc_layer_2_and_2a), correct = FALSE)
+
+# 4.4 Chi-square test between Layer 2 and 1.
+
+sc_layer_1_and_2 <-  as.data.frame((sc[, 2:3]))
+
+# exclude taxa with no counts
+sc_layer_1_and_2 <- sc_layer_1_and_2[!rowSums(sc_layer_1_and_2) == 0, ]
+
+# compute chi-sq
+sc_layer_1_and_2_chisq.summary <- chisq.test(t(sc_layer_1_and_2), correct = FALSE)
+```
+
+```{r table of all chi-sq values}
+
+# table of all chi-sq values
+my_chi_sqs <- list(sc_layer_1_and_2_chisq.summary,  
+                     sc_layer_2_and_2a_chisq.summary, 
+                     sc_layer_3_and_2a_chisq.summary,
+                     sc_layer_3_and_4_chisq.summary)
+
+# extract chi-sq, df, and p-values into a table
+my_chi_sqs_df <- ldply(my_chi_sqs, function(i) c(unname(i$statistic), unname(i$parameter),  i$p.value))
+# add col names
+names(my_chi_sqs_df) <- c('chi-sq', 'df', 'p')
+# add row names
+my_chi_sqs_df$layers <- c("1_and_2", "2_and_2a", "2a_and_3", "3_and_4")
+# rearrange the cols to put names first
+my_chi_sqs_df <- my_chi_sqs_df[,c(4,1:3)]
+# show the table
+my_chi_sqs_df
+```
+
+```{r burnt bone spearmans rho analysis}
+#5. Analysis of burnt bone NISPs and sample size using Spearmans rho.
+
+burn <- read.table(text="
+                  NISP NRSP
+                  9 44     
+                  72 373
+                  16 113
+                  30 107
+                  194 1767
+                  ", header=TRUE)
+burn
+# spearman's rho on the ratios to sample size
+burn_NRSP_NISP_cor <- cor.test(burn$NISP, burn$NRSP, method = 'spearman')
+burn_NRSP_NISP_cor_cor_r <-  unname(burn_NRSP_NISP_cor$estimate)
+burn_NRSP_NISP_cor_cor_p <-  round(burn_NRSP_NISP_cor$p.value, 3)
+```
+
+```{r session_info}
+# Computational environment and software dependencies for this analysis.
+sessionInfo()
+```
+
+LICENSE
+ 
+The MIT License (MIT)
+
+Copyright (c) 2015 Cyler Conrad & Ben Marwick
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

@@ -1,0 +1,18 @@
+Package: spiritcavefaunalanalysis
+Type: Package
+Title: Zooarchaeological analysis of the assemblage from Spirit Cave, Thailand
+Version: 0.1.0
+Authors@R: c(person("Ben", "Marwick", email = "benmarwick@gmail.com", role = c("aut", "cre")), person("Cyler", "Conrad", email = "cylerc@unm.edu", role = c("aut")))
+Maintainer: Ben Marwick <benmarwick@gmail.com>
+Description: Code and data associated with the paper 'Paleoecology and Forager Subsistence Strategies During the Pleistocene-Holocene Transition: A Reinvestigation of the Zooarchaeological Assemblage from Spirit Cave, Mae Hong Son Province, Thailand'
+License: MIT
+LazyData: TRUE
+Depends: R (>= 3.2.0),
+  knitr,
+  Bchron,
+  car,
+  ggplot2,
+  reshape2,
+  plyr,
+  dplyr,
+  viridis
