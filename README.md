@@ -1,7 +1,7 @@
 # AP_SC
 R script for Spirit Cave zooarchaeological analysis. 
 
-Author of this repository: Cyler Norman Conrad (cylerc@unm.edu) & Ben Marwick (bmarwick@uw.edu)
+Authors of this repository: Cyler Norman Conrad (cylerc@unm.edu) & Ben Marwick (bmarwick@uw.edu)
 
 This repository contains R scripts to create figures and analyze data for the Spirit Cave, Thailand zooarchaeological assemblage.
 
