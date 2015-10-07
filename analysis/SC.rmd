@@ -6,7 +6,7 @@ Ben Marwick, Department of Anthropology, University of Washington, bmarwick@uw.e
 
 This document contain R code to reproduce the plots and statistical analysis presented in 
 
-> Conrad, C., Higham, C. and Eda, M. (in press) Paleoecology and Forager Subsistence Strategies During the Pleistocene-Holocene Transition: A Reinvestigation of the Zooarchaeological Assemblage from Spirit Cave, Mae Hong Son Province, Thailand. Asian Perspectives. 
+> Conrad, C., Higham, C., Eda, M. and Marwick, B. (in press) Paleoecology and Forager Subsistence Strategies During the Pleistocene-Holocene Transition: A Reinvestigation of the Zooarchaeological Assemblage from Spirit Cave, Mae Hong Son Province, Thailand. Asian Perspectives. 
 
 All data required to perform the analyses can be found at the University of New Mexico digital electronic repository (Conrad 2015). The development version of this document can be found at https://github.com/cylerc/AP_SC
 
@@ -125,6 +125,11 @@ ggplot(scn, aes(NISP, NTAXA)) +
   theme_minimal() +
   ggtitle("Spirit Cave NISP-NTAXA")
 
+fig_width <- 200 # play with this number
+ggsave(filename = "analysis/figures/NISP-NTAXA.tiff",
+       dpi = 200, units = "mm",
+       height = fig_width/1.6, width =  fig_width)
+
 # GLM with poisson 
 glm.nisp.ntaxa.p <- glm(NTAXA ~ NISP, data = scn, family = poisson)
 
@@ -174,6 +179,11 @@ ggplot(scm, aes(MNI, NTAXA)) +
   geom_smooth(method = "glm") +
   theme_minimal() +
   ggtitle("Spirit Cave MNI-NTAXA")
+
+fig_width <- 200 # play with this number
+ggsave(filename = "analysis/figures/MNI-NTAXA.tiff",
+       dpi = 200, units = "mm",
+       height = fig_width/1.6, width =  fig_width)
 
 # GLM with poisson 
 glm.mni.ntaxa.p <- glm(NTAXA ~ MNI, data = scm, family = poisson)
