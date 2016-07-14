@@ -9,7 +9,7 @@ Written by Cyler Conrad, Department of Anthropology, University of New Mexico & 
 
 Results described in:
 
-Conrad, C., Higham, C., Eda, M. and Marwick, B. (in press) Paleoecology and Forager Subsistence Strategies During the Pleistocene-Holocene Transition: A Reinvestigation of the Zooarchaeological Assemblage from Spirit Cave, Mae Hong Son Province, Thailand. Asian Perspectives.
+Conrad, C., Higham, C., Eda, M. and Marwick, B. (2016) Paleoecology and Forager Subsistence Strategies During the Pleistocene-Holocene Transition: A Reinvestigation of the Zooarchaeological Assemblage from Spirit Cave, Mae Hong Son Province, Thailand. Asian Perspectives 55(1).
 
 NOTES All data required to perform the analyses can be found in (Conrad 2015). The script was run using R version 3.1.1 on Mac OS X 10.8.5
 
